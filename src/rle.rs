@@ -1,21 +1,38 @@
 pub fn compress(input: &[u8]) -> Vec<u8> {
     let mut compressed = Vec::new();
-    let mut count = 1;
+    let mut i = 0;
 
-    for i in 1..input.len() {
-        if input[i] == input[i - 1] {
-            count += 1;
-        } else {
-            compressed.push(count);
-            compressed.push(input[i - 1]);
-            count = 1;
+    while i < input.len() {
+        // Check for run of repeated bytes
+        let mut run_len = 1;
+        while i + run_len < input.len()
+            && input[i + run_len] == input[i]
+            && run_len < 127
+        {
+            run_len += 1;
         }
-    }
 
-    // добавление последнего блока
-    if !input.is_empty() {
-        compressed.push(count);
-        compressed.push(input[input.len() - 1]);
+        if run_len > 1 {
+            compressed.push(run_len as u8);
+            compressed.push(input[i]);
+            i += run_len;
+        } else {
+            // Collect distinct bytes
+            let distinct_start = i;
+            let mut distinct_count: usize = 2;
+            i += 2;
+            while i < input.len()
+                && !(input[i] == input[i - 1] && input[i] == input[i - 2])
+                && distinct_count < 127
+            {
+                distinct_count += 1;
+                i += 1;
+            }
+            distinct_count = distinct_count.saturating_sub(2);
+            i = i.saturating_sub(2);
+            compressed.push(128 + distinct_count as u8);
+            compressed.extend_from_slice(&input[distinct_start..distinct_start + distinct_count]);
+        }
     }
 
     compressed
@@ -23,12 +40,25 @@ pub fn compress(input: &[u8]) -> Vec<u8> {
 
 pub fn decompress(input: &[u8]) -> Vec<u8> {
     let mut decompressed = Vec::new();
+    let mut i = 0;
 
-    for chunk in input.chunks(2) {
-        if chunk.len() == 2 {
-            let count = chunk[0];
-            let value = chunk[1];
-            decompressed.extend(vec![value; count as usize]);
+    while i < input.len() {
+        let count = input[i];
+        i += 1;
+        if count <= 127 {
+            if i < input.len() {
+                let value = input[i];
+                i += 1;
+                decompressed.extend(std::iter::repeat(value).take(count as usize));
+            }
+        } else {
+            let distinct_count = (count - 128) as usize;
+            if i + distinct_count <= input.len() {
+                decompressed.extend_from_slice(&input[i..i + distinct_count]);
+                i += distinct_count;
+            } else {
+                break;
+            }
         }
     }
 
