@@ -2,6 +2,7 @@ use crate::rle;
 use crate::lz77;
 use crate::lz4;
 use crate::lzw;
+use crate::huffman;
 use std::thread;
 
 pub enum Algorithm {
@@ -9,6 +10,7 @@ pub enum Algorithm {
     Lz77,
     Lz4,
     Lzw,
+    Hf,
 }
 
 
@@ -19,6 +21,7 @@ impl Clone for Algorithm {
             Algorithm::Lz77 => Algorithm::Lz77,
             Algorithm::Lz4 => Algorithm::Lz4,
             Algorithm::Lzw => Algorithm::Lzw, 
+            Algorithm::Hf => Algorithm::Hf, 
         }
     }
 }
@@ -33,7 +36,9 @@ pub fn compress(input: &[u8], algorithm: Algorithm, use_multithreading: bool) ->
         let mut handles = Vec::new();
 
         for chunk in input.chunks(chunk_size) {
+            
             let chunk = chunk.to_vec();
+            print!("Chunk: {:?}", chunk);
             let algo = algorithm.clone();
             let handle = thread::spawn(move || {
                 match algo {
@@ -41,6 +46,7 @@ pub fn compress(input: &[u8], algorithm: Algorithm, use_multithreading: bool) ->
                     Algorithm::Lz77 => lz77::compress(&chunk),
                     Algorithm::Lz4 => lz4::compress(&chunk),
                     Algorithm::Lzw => lzw::compress(&chunk), 
+                    Algorithm::Hf => huffman::compress(&chunk), 
                 }
             });
             handles.push(handle);
@@ -59,6 +65,7 @@ pub fn compress(input: &[u8], algorithm: Algorithm, use_multithreading: bool) ->
             Algorithm::Lz77 => lz77::compress(input),
             Algorithm::Lz4 => lz4::compress(input),
             Algorithm::Lzw => lzw::compress(input), 
+            Algorithm::Hf => huffman::compress(input), 
         }
     }
 }
@@ -72,6 +79,7 @@ pub fn decompress(input: &[u8], algorithm: Algorithm, use_multithreading: bool) 
             Algorithm::Lz77 => lz77::decompress(input),
             Algorithm::Lz4 => lz4::decompress(input),
             Algorithm::Lzw => lzw::decompress(input), 
+            Algorithm::Hf => huffman::decompress(input), 
         }
     } else {
         match algorithm {
@@ -79,6 +87,7 @@ pub fn decompress(input: &[u8], algorithm: Algorithm, use_multithreading: bool) 
             Algorithm::Lz77 => lz77::decompress(input),
             Algorithm::Lz4 => lz4::decompress(input),
             Algorithm::Lzw => lzw::decompress(input),
+            Algorithm::Hf => huffman::decompress(input), 
         }
     }
 }

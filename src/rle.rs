@@ -17,6 +17,22 @@ pub fn compress(input: &[u8]) -> Vec<u8> {
             compressed.push(input[i]);
             i += run_len;
         } else {
+
+            if i + 2 >= input.len() {
+                if i + 1 >= input.len() {
+                    compressed.push(1);
+                    compressed.push(input[i]);
+                    i += 1;
+                } else
+                {
+                    compressed.push(128+2);
+                compressed.push(input[i]);
+                compressed.push(input[i+1]);
+                i += 2;
+                
+            }
+            continue;
+            }
             // Collect distinct bytes
             let distinct_start = i;
             let mut distinct_count: usize = 2;
@@ -29,9 +45,11 @@ pub fn compress(input: &[u8]) -> Vec<u8> {
                 i += 1;
             }
             distinct_count = distinct_count.saturating_sub(2);
-            i = i.saturating_sub(2);
             compressed.push(128 + distinct_count as u8);
             compressed.extend_from_slice(&input[distinct_start..distinct_start + distinct_count]);
+            
+                i = i.saturating_sub(2);
+
         }
     }
 

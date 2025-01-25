@@ -4,8 +4,10 @@ mod lz77;
 mod lz4;
 mod processing;
 mod lzw;
+mod huffman;
 
 use std::env;
+use std::time::Instant;
 use processing::Algorithm;
 
 fn main() {
@@ -20,7 +22,6 @@ fn main() {
     let input_file = &args[3];
     let output_file = &args[4];
 
-    
     let use_multithreading = if args.len() == 6 {
         match args[5].as_str() {
             "single" => false,
@@ -39,6 +40,7 @@ fn main() {
         "lz77" => Algorithm::Lz77,
         "lz4" => Algorithm::Lz4,
         "lzw" => Algorithm::Lzw, 
+        "hf" => Algorithm::Hf, 
         _ => {
             eprintln!("Unknown algorithm: {}", algorithm_str);
             return;
@@ -46,6 +48,8 @@ fn main() {
     };
 
     let input = io::read_file(input_file).expect("Failed to read input file");
+
+    let start_time = Instant::now();
 
     let output_data = match command.as_str() {
         "compress" => processing::compress(&input, algorithm, use_multithreading),
@@ -63,6 +67,9 @@ fn main() {
         }
     };
 
+    let duration = start_time.elapsed();
+
     io::write_file(output_file, &output_data).expect("Failed to write output file");
     println!("Operation successfully completed.");
+    println!("Elapsed time: {:.2?}", duration);
 }
