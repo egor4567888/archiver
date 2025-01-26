@@ -5,6 +5,7 @@ use crate::lzw;
 use crate::huffman;
 use std::thread;
 
+
 pub enum Algorithm {
     Rle,
     Lz77,
