@@ -1,19 +1,28 @@
+//! Модуль для сжатия и распаковки данных с использованием алгоритма Хаффмана.
+//!
+//! Этот модуль предоставляет функции для сжатия и распаковки данных с использованием алгоритма Хаффмана. 
+//! Алгоритм Хаффмана используется для создания оптимальных префиксных кодов для символов на основе их частоты появления в данных.
 use std::collections::{BinaryHeap, HashMap};
 
+/// Структура узла дерева Хаффмана.
 #[derive(Eq, PartialEq)]
 struct Node {
+    /// Частота появления байта.
     freq: usize,
+    /// Значение байта. `None` для внутренних узлов.
     byte: Option<u8>,
+    /// Левый дочерний узел.
     left: Option<Box<Node>>,
+    /// Правый дочерний узел.
     right: Option<Box<Node>>,
 }
 
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        // Compare by frequency first
+       
         let freq_order = other.freq.cmp(&self.freq);
         if freq_order == std::cmp::Ordering::Equal {
-            // Tiebreak by byte value to ensure consistent ordering
+            
             let self_byte = self.byte.unwrap_or(0);
             let other_byte = other.byte.unwrap_or(0);
             return self_byte.cmp(&other_byte);
@@ -27,9 +36,19 @@ impl PartialOrd for Node {
     }
 }
 
+/// Строит дерево Хаффмана на основе карты частот.
+///
+/// # Аргументы
+///
+/// * `freq_map` - Карта частот байтов.
+///
+/// # Возвращает
+///
+/// `Option<Box<Node>>` - Опциональный корень дерева Хаффмана.
 fn build_huffman_tree(freq_map: &HashMap<u8, usize>) -> Option<Box<Node>> {
     let mut freq_vec: Vec<(u8, usize)> = freq_map.iter().map(|(&b, &f)| (b, f)).collect();
-    // Sort by byte to ensure consistent insertion order
+    
+    // Сортировка по значению байта.
     freq_vec.sort_by_key(|(b, _)| *b);
 
     let mut heap = BinaryHeap::new();
@@ -42,6 +61,7 @@ fn build_huffman_tree(freq_map: &HashMap<u8, usize>) -> Option<Box<Node>> {
         }));
     }
 
+    // Слияние узлов до получения одного корня.
     while heap.len() > 1 {
         let left = heap.pop().unwrap();
         let right = heap.pop().unwrap();
@@ -55,6 +75,17 @@ fn build_huffman_tree(freq_map: &HashMap<u8, usize>) -> Option<Box<Node>> {
     heap.pop()
 }
 
+/// Рекурсивно строит коды Хаффмана для каждого байта.
+///
+/// # Аргументы
+///
+/// * `node` - Текущий узел дерева Хаффмана.
+/// * `prefix` - Префикс кода до текущего узла.
+/// * `codes` - Словарь для хранения кодов байтов.
+///
+/// # Возвращает
+///
+/// Нет значений (функция изменяет `codes` через мутабельную ссылку).
 fn build_codes(node: &Option<Box<Node>>, prefix: Vec<bool>, codes: &mut HashMap<u8, Vec<bool>>) {
     if let Some(n) = node {
         if let Some(b) = n.byte {
@@ -71,6 +102,15 @@ fn build_codes(node: &Option<Box<Node>>, prefix: Vec<bool>, codes: &mut HashMap<
     }
 }
 
+/// Сжимает входные данные с использованием алгоритма Хаффмана.
+///
+/// # Аргументы
+///
+/// * `input` - Срез байтов, которые требуется сжать.
+///
+/// # Возвращает
+///
+/// Вектор байтов, представляющий сжатые данные.
 pub fn compress(input: &[u8]) -> Vec<u8> {
     if input.is_empty() {
         return vec![];
@@ -131,7 +171,15 @@ pub fn compress(input: &[u8]) -> Vec<u8> {
     compressed
 }
 
-// ...existing code...
+/// Распаковывает сжатые данные, используя алгоритм Хаффмана.
+///
+/// # Аргументы
+///
+/// * `input` - Срез байтов, которые требуется распаковать.
+///
+/// # Возвращает
+///
+/// Вектор байтов, представляющий распакованные данные.
 pub fn decompress(input: &[u8]) -> Vec<u8> {
     if input.is_empty() {
         return vec![];

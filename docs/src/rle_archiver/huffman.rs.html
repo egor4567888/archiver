@@ -239,23 +239,80 @@
 <a href="#239" id="239">239</a>
 <a href="#240" id="240">240</a>
 <a href="#241" id="241">241</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{BinaryHeap, HashMap};
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Модуль для сжатия и распаковки данных с использованием алгоритма Хаффмана.
+//!
+//! Этот модуль предоставляет функции для сжатия и распаковки данных с использованием алгоритма Хаффмана. 
+//! Алгоритм Хаффмана используется для создания оптимальных префиксных кодов для символов на основе их частоты появления в данных.
+</span><span class="kw">use </span>std::collections::{BinaryHeap, HashMap};
 
-<span class="attr">#[derive(Eq, PartialEq)]
+<span class="doccomment">/// Структура узла дерева Хаффмана.
+</span><span class="attr">#[derive(Eq, PartialEq)]
 </span><span class="kw">struct </span>Node {
-    freq: usize,
-    byte: <span class="prelude-ty">Option</span>&lt;u8&gt;,
-    left: <span class="prelude-ty">Option</span>&lt;Box&lt;Node&gt;&gt;,
-    right: <span class="prelude-ty">Option</span>&lt;Box&lt;Node&gt;&gt;,
+    <span class="doccomment">/// Частота появления байта.
+    </span>freq: usize,
+    <span class="doccomment">/// Значение байта. `None` для внутренних узлов.
+    </span>byte: <span class="prelude-ty">Option</span>&lt;u8&gt;,
+    <span class="doccomment">/// Левый дочерний узел.
+    </span>left: <span class="prelude-ty">Option</span>&lt;Box&lt;Node&gt;&gt;,
+    <span class="doccomment">/// Правый дочерний узел.
+    </span>right: <span class="prelude-ty">Option</span>&lt;Box&lt;Node&gt;&gt;,
 }
 
 <span class="kw">impl </span>Ord <span class="kw">for </span>Node {
     <span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; std::cmp::Ordering {
-        <span class="comment">// Compare by frequency first
-        </span><span class="kw">let </span>freq_order = other.freq.cmp(<span class="kw-2">&amp;</span><span class="self">self</span>.freq);
+       
+        <span class="kw">let </span>freq_order = other.freq.cmp(<span class="kw-2">&amp;</span><span class="self">self</span>.freq);
         <span class="kw">if </span>freq_order == std::cmp::Ordering::Equal {
-            <span class="comment">// Tiebreak by byte value to ensure consistent ordering
-            </span><span class="kw">let </span>self_byte = <span class="self">self</span>.byte.unwrap_or(<span class="number">0</span>);
+            
+            <span class="kw">let </span>self_byte = <span class="self">self</span>.byte.unwrap_or(<span class="number">0</span>);
             <span class="kw">let </span>other_byte = other.byte.unwrap_or(<span class="number">0</span>);
             <span class="kw">return </span>self_byte.cmp(<span class="kw-2">&amp;</span>other_byte);
         }
@@ -268,9 +325,19 @@
     }
 }
 
-<span class="kw">fn </span>build_huffman_tree(freq_map: <span class="kw-2">&amp;</span>HashMap&lt;u8, usize&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;Node&gt;&gt; {
+<span class="doccomment">/// Строит дерево Хаффмана на основе карты частот.
+///
+/// # Аргументы
+///
+/// * `freq_map` - Карта частот байтов.
+///
+/// # Возвращает
+///
+/// `Option&lt;Box&lt;Node&gt;&gt;` - Опциональный корень дерева Хаффмана.
+</span><span class="kw">fn </span>build_huffman_tree(freq_map: <span class="kw-2">&amp;</span>HashMap&lt;u8, usize&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;Node&gt;&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>freq_vec: Vec&lt;(u8, usize)&gt; = freq_map.iter().map(|(<span class="kw-2">&amp;</span>b, <span class="kw-2">&amp;</span>f)| (b, f)).collect();
-    <span class="comment">// Sort by byte to ensure consistent insertion order
+    
+    <span class="comment">// Сортировка по значению байта.
     </span>freq_vec.sort_by_key(|(b, <span class="kw">_</span>)| <span class="kw-2">*</span>b);
 
     <span class="kw">let </span><span class="kw-2">mut </span>heap = BinaryHeap::new();
@@ -283,7 +350,8 @@
         }));
     }
 
-    <span class="kw">while </span>heap.len() &gt; <span class="number">1 </span>{
+    <span class="comment">// Слияние узлов до получения одного корня.
+    </span><span class="kw">while </span>heap.len() &gt; <span class="number">1 </span>{
         <span class="kw">let </span>left = heap.pop().unwrap();
         <span class="kw">let </span>right = heap.pop().unwrap();
         heap.push(Box::new(Node {
@@ -296,7 +364,18 @@
     heap.pop()
 }
 
-<span class="kw">fn </span>build_codes(node: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Box&lt;Node&gt;&gt;, prefix: Vec&lt;bool&gt;, codes: <span class="kw-2">&amp;mut </span>HashMap&lt;u8, Vec&lt;bool&gt;&gt;) {
+<span class="doccomment">/// Рекурсивно строит коды Хаффмана для каждого байта.
+///
+/// # Аргументы
+///
+/// * `node` - Текущий узел дерева Хаффмана.
+/// * `prefix` - Префикс кода до текущего узла.
+/// * `codes` - Словарь для хранения кодов байтов.
+///
+/// # Возвращает
+///
+/// Нет значений (функция изменяет `codes` через мутабельную ссылку).
+</span><span class="kw">fn </span>build_codes(node: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Box&lt;Node&gt;&gt;, prefix: Vec&lt;bool&gt;, codes: <span class="kw-2">&amp;mut </span>HashMap&lt;u8, Vec&lt;bool&gt;&gt;) {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(n) = node {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(b) = n.byte {
             codes.insert(b, prefix);
@@ -312,7 +391,16 @@
     }
 }
 
-<span class="kw">pub fn </span>compress(input: <span class="kw-2">&amp;</span>[u8]) -&gt; Vec&lt;u8&gt; {
+<span class="doccomment">/// Сжимает входные данные с использованием алгоритма Хаффмана.
+///
+/// # Аргументы
+///
+/// * `input` - Срез байтов, которые требуется сжать.
+///
+/// # Возвращает
+///
+/// Вектор байтов, представляющий сжатые данные.
+</span><span class="kw">pub fn </span>compress(input: <span class="kw-2">&amp;</span>[u8]) -&gt; Vec&lt;u8&gt; {
     <span class="kw">if </span>input.is_empty() {
         <span class="kw">return </span><span class="macro">vec!</span>[];
     }
@@ -372,7 +460,15 @@
     compressed
 }
 
-<span class="comment">// ...existing code...
+<span class="doccomment">/// Распаковывает сжатые данные, используя алгоритм Хаффмана.
+///
+/// # Аргументы
+///
+/// * `input` - Срез байтов, которые требуется распаковать.
+///
+/// # Возвращает
+///
+/// Вектор байтов, представляющий распакованные данные.
 </span><span class="kw">pub fn </span>decompress(input: <span class="kw-2">&amp;</span>[u8]) -&gt; Vec&lt;u8&gt; {
     <span class="kw">if </span>input.is_empty() {
         <span class="kw">return </span><span class="macro">vec!</span>[];

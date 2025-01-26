@@ -1,6 +1,12 @@
+//! Модуль для сжатия и распаковки данных с использованием алгоритма LZW.
+//!
+//! Этот модуль предоставляет функции для сжатия и распаковки данных с использованием алгоритма LZW. 
+//! Алгоритм LZW используется для сжатия данных путем замены повторяющихся последовательностей кодами из словаря.
+
 use std::collections::HashMap;
 use std::io::{self, Write, Read};
 
+/// Структура для записи битов в поток.
 struct BitWriter<W: Write> {
     writer: W,
     current_byte: u8,
@@ -8,6 +14,15 @@ struct BitWriter<W: Write> {
 }
 
 impl<W: Write> BitWriter<W> {
+     /// Создает новый BitWriter.
+    ///
+    /// # Аргументы
+    ///
+    /// * `writer` - Поток для записи.
+    ///
+    /// # Возвращает
+    ///
+    /// Новый экземпляр BitWriter.
     fn new(writer: W) -> Self {
         BitWriter {
             writer,
@@ -15,7 +30,16 @@ impl<W: Write> BitWriter<W> {
             bit_position: 0,
         }
     }
-
+/// Записывает заданное количество битов в поток.
+    ///
+    /// # Аргументы
+    ///
+    /// * `bits` - Биты для записи.
+    /// * `num_bits` - Количество битов для записи.
+    ///
+    /// # Возвращает
+    ///
+    /// Результат операции записи.
     fn write_bits(&mut self, bits: u16, num_bits: u8) -> io::Result<()> {
         let mut bits = bits;
         for _ in 0..num_bits {
@@ -31,7 +55,12 @@ impl<W: Write> BitWriter<W> {
         }
         Ok(())
     }
-
+    
+    /// Завершает запись и очищает буфер.
+    ///
+    /// # Возвращает
+    ///
+    /// Результат операции записи.
     fn flush(&mut self) -> io::Result<()> {
         if self.bit_position > 0 {
             self.current_byte <<= 8 - self.bit_position;
@@ -43,7 +72,10 @@ impl<W: Write> BitWriter<W> {
     }
 }
 
+
+/// Структура для чтения битов из потока.
 struct BitReader<R: Read> {
+
     reader: R,
     current_byte: u8,
     bit_position: u8, 
@@ -51,6 +83,15 @@ struct BitReader<R: Read> {
 }
 
 impl<R: Read> BitReader<R> {
+         /// Создает новый BitReader.
+    ///
+    /// # Аргументы
+    ///
+    /// * `reader` - Поток для чтения.
+    ///
+    /// # Возвращает
+    ///
+    /// Новый экземпляр BitReader.
     fn new(reader: R) -> Self {
         BitReader {
             reader,
@@ -59,6 +100,15 @@ impl<R: Read> BitReader<R> {
             eof: false,
         }
     }
+    /// Читает заданное количество битов из потока.
+    ///
+    /// # Аргументы
+    ///
+    /// * `num_bits` - Количество битов для чтения.
+    ///
+    /// # Возвращает
+    ///
+    /// Опциональное значение, содержащее прочитанные биты.
 
     fn read_bits(&mut self, num_bits: u8) -> io::Result<Option<u16>> {
         let mut result: u16 = 0;
@@ -83,10 +133,18 @@ impl<R: Read> BitReader<R> {
     }
 }
 
-// Максимальный размер словаря 
-const MAX_DICT_SIZE: u16 = 4096; // 12 бит
+/// Максимальный размер словаря 
+const MAX_DICT_SIZE: u16 = 4096; 
 
-
+/// Сжимает входные данные с использованием алгоритма LZW.
+///
+/// # Аргументы
+///
+/// * `input` - Срез байтов, которые требуется сжать.
+///
+/// # Возвращает
+///
+/// Вектор байтов, представляющий сжатые данные.
 pub fn compress(input: &[u8]) -> Vec<u8> {
     let mut dictionary: HashMap<Vec<u8>, u16> = HashMap::new();
     let mut dict_size: u16 = 256;
@@ -125,7 +183,15 @@ pub fn compress(input: &[u8]) -> Vec<u8> {
     result
 }
 
-
+/// Распаковывает сжатые данные, используя алгоритм LZW.
+///
+/// # Аргументы
+///
+/// * `input` - Срез байтов, которые требуется распаковать.
+///
+/// # Возвращает
+///
+/// Вектор байтов, представляющий распакованные данные.
 pub fn decompress(input: &[u8]) -> Vec<u8> {
     let mut bit_reader = BitReader::new(&input[..]);
     let mut codes: Vec<u16> = Vec::new();

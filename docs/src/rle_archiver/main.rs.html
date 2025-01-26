@@ -100,7 +100,61 @@
 <a href="#100" id="100">100</a>
 <a href="#101" id="101">101</a>
 <a href="#102" id="102">102</a>
-</pre></div><pre class="rust"><code><span class="kw">mod </span>io;
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Основной модуль архиватора, отвечающий за сжатие и распаковку файлов с использованием различных алгоритмов.
+</span><span class="kw">mod </span>io;
 <span class="kw">mod </span>rle;
 <span class="kw">mod </span>lz77;
 <span class="kw">mod </span>lz4;
@@ -108,81 +162,131 @@
 <span class="kw">mod </span>lzw;
 <span class="kw">mod </span>huffman;
 
-<span class="kw">use </span>std::env;
 <span class="kw">use </span>std::time::Instant;
 <span class="kw">use </span>processing::Algorithm;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
-<span class="kw">use </span>bincode;
-<span class="kw">use </span>std::path::{Path};
+<span class="kw">use </span>std::path::Path;
+
 <span class="kw">use </span>std::io::Write;
 <span class="kw">use </span>std::os::unix::fs::PermissionsExt;
+<span class="kw">use </span>clap::{Command, Arg, ArgAction};
+<span class="kw">use </span>log::error;
 
-<span class="attr">#[derive(Serialize, Deserialize)]
+<span class="doccomment">/// Структура для хранения данных архива.
+</span><span class="attr">#[derive(Serialize, Deserialize)]
 </span><span class="kw">struct </span>ArchiveData {
-    entries: Vec&lt;io::DirEntry&gt;,
+    <span class="doccomment">/// Список записей директории.
+    </span>entries: Vec&lt;io::DirEntry&gt;,
 }
 
 
+<span class="doccomment">/// Главная функция приложения.
+/// Инициализирует и настраивает команду rle_archiver с различными аргументами.
+    ///
+    /// ## Аргументы
+    ///
+    /// - `compress` (`-c`): Сжимает файлы. Не может использоваться вместе с `decompress`. Обязателен, если не указан `decompress`.
+    /// - `decompress` (`-d`): Распаковывает файлы. Не может использоваться вместе с `compress`. Обязателен, если не указан `compress`.
+    /// - `algorithm`: Выбор алгоритма сжатия. Обязательный аргумент.
+    /// - `input`: Входной файл для обработки. Обязательный аргумент.
+    /// - `output`: Выходной файл. Обязательный аргумент.
+    /// - `multithread` (`-m`): Включает многопоточную обработку.
+</span><span class="kw">fn </span>main() {
+    
+    
+    <span class="comment">// Определение аргументов командной строки
+    </span><span class="kw">let </span>matches = Command::new(<span class="string">"rle_archiver"</span>)
+        .version(<span class="string">"1.0"</span>)
+        .author(<span class="string">"Your Name &lt;youremail@example.com&gt;"</span>)
+        .about(<span class="string">"Compresses and decompresses files using various algorithms"</span>)
+        .arg(Arg::new(<span class="string">"compress"</span>)
+            .short(<span class="string">'c'</span>)
+            .conflicts_with(<span class="string">"decompress"</span>)
+            .help(<span class="string">"Compress files"</span>)
+            .required_unless_present(<span class="string">"decompress"</span>)
+            .action(ArgAction::SetTrue))
+        .arg(Arg::new(<span class="string">"decompress"</span>)
+            .short(<span class="string">'d'</span>)
+            .conflicts_with(<span class="string">"compress"</span>)
+            .help(<span class="string">"Decompress files"</span>)
+            .required_unless_present(<span class="string">"compress"</span>)
+            .action(ArgAction::SetTrue))
+        .arg(Arg::new(<span class="string">"algorithm"</span>)
+            .short(<span class="string">'a'</span>)
+            .help(<span class="string">"Compression algorithm to use"</span>)
+            .required(<span class="bool-val">true</span>)
+            .num_args(<span class="number">1</span>)) 
+        .arg(Arg::new(<span class="string">"input"</span>)
+            .short(<span class="string">'i'</span>)
+            .help(<span class="string">"Input file to process"</span>)
+            .required(<span class="bool-val">true</span>)
+            .num_args(<span class="number">1</span>)) 
+        .arg(Arg::new(<span class="string">"output"</span>)
+            .short(<span class="string">'o'</span>)
+            .help(<span class="string">"Output file"</span>)
+            .required(<span class="bool-val">true</span>)
+            .num_args(<span class="number">1</span>))
+        .arg(Arg::new(<span class="string">"multithread"</span>)
+            .short(<span class="string">'m'</span>)
+            .help(<span class="string">"Enable multithreading"</span>)
+            .action(ArgAction::SetTrue))
+        .get_matches();
 
-<span class="kw">fn </span>main() {
-    <span class="kw">let </span>args: Vec&lt;String&gt; = env::args().collect();
-    <span class="kw">if </span>args.len() &lt; <span class="number">5 </span>|| args.len() &gt; <span class="number">6 </span>{
-        <span class="macro">eprintln!</span>(<span class="string">"Usage: rle_archiver &lt;compress|decompress&gt; &lt;algorithm&gt; &lt;input_file&gt; &lt;output_file&gt; [mode]"</span>);
-        <span class="kw">return</span>;
-    }
-
-    <span class="kw">let </span>command = <span class="kw-2">&amp;</span>args[<span class="number">1</span>];
-    <span class="kw">let </span>algorithm_str = <span class="kw-2">&amp;</span>args[<span class="number">2</span>];
-    <span class="kw">let </span>input_file = <span class="kw-2">&amp;</span>args[<span class="number">3</span>];
-    <span class="kw">let </span>output_file = <span class="kw-2">&amp;</span>args[<span class="number">4</span>];
-
-    <span class="kw">let </span>use_multithreading = <span class="kw">if </span>args.len() == <span class="number">6 </span>{
-        <span class="kw">match </span>args[<span class="number">5</span>].as_str() {
-            <span class="string">"single" </span>=&gt; <span class="bool-val">false</span>,
-            <span class="string">"multi" </span>=&gt; <span class="bool-val">true</span>,
-            <span class="kw">_ </span>=&gt; {
-                <span class="macro">eprintln!</span>(<span class="string">"Invalid mode. Use 'single' or 'multi'."</span>);
-                <span class="kw">return</span>;
-            }
-        }
-    } <span class="kw">else </span>{
-        <span class="bool-val">false
+    <span class="comment">// Определение команды (сжатие или распаковка)
+    </span><span class="kw">let </span>command = <span class="kw">if </span>matches.get_flag(<span class="string">"compress"</span>) {
+        <span class="string">"compress"
+    </span>} <span class="kw">else </span>{
+        <span class="string">"decompress"
     </span>};
 
-    <span class="kw">let </span>algorithm = <span class="kw">match </span>algorithm_str.as_str() {
+    <span class="comment">// Извлечение значений аргументов
+    </span><span class="kw">let </span>algorithm_str = matches.get_one::&lt;String&gt;(<span class="string">"algorithm"</span>).unwrap();
+    <span class="kw">let </span>input_file = matches.get_one::&lt;String&gt;(<span class="string">"input"</span>).unwrap();
+    <span class="kw">let </span>output_file = matches.get_one::&lt;String&gt;(<span class="string">"output"</span>).unwrap();
+
+    <span class="kw">let </span>use_multithreading = matches.get_flag(<span class="string">"multithread"</span>);
+
+    <span class="comment">// Определение алгоритма на основе аргумента
+    </span><span class="kw">let </span>algorithm = <span class="kw">match </span>algorithm_str.as_str() {
         <span class="string">"rle" </span>=&gt; Algorithm::Rle,
         <span class="string">"lz77" </span>=&gt; Algorithm::Lz77,
         <span class="string">"lz4" </span>=&gt; Algorithm::Lz4,
         <span class="string">"lzw" </span>=&gt; Algorithm::Lzw,
         <span class="string">"hf" </span>=&gt; Algorithm::Hf,
         <span class="kw">_ </span>=&gt; {
-            <span class="macro">eprintln!</span>(<span class="string">"Unknown algorithm: {}"</span>, algorithm_str);
-            <span class="kw">return</span>;
+            <span class="macro">error!</span>(<span class="string">"Неподдерживаемый алгоритм: {}"</span>, algorithm_str);
+            std::process::exit(<span class="number">1</span>);
         }
     };
 
     <span class="kw">let </span>input_path = Path::new(input_file);
     <span class="kw">let </span>start_time = Instant::now();
 
-    <span class="kw">match </span>command.as_str() {
+
+    <span class="comment">// Выполнение команды
+    </span><span class="kw">match </span>command {
         <span class="string">"compress" </span>=&gt; {
-            <span class="kw">let </span>entries = io::read_dir_recursive(input_path, input_path).expect(<span class="string">"Failed to read path"</span>);
-            <span class="kw">let </span>serialized = bincode::serialize(<span class="kw-2">&amp;</span>ArchiveData { entries })
-                .expect(<span class="string">"Failed to serialize directory/file data"</span>);
-            <span class="kw">let </span>compressed = processing::compress(<span class="kw-2">&amp;</span>serialized, algorithm, use_multithreading);
+            <span class="comment">// Чтение директории и сериализация данных
+            </span><span class="kw">let </span>entries = io::read_dir_recursive(input_path, input_path).expect(<span class="string">"Failed to read path"</span>);
+            <span class="kw">let </span>serialized = io::archive_data_to_bytes(<span class="kw-2">&amp;</span>ArchiveData { entries });
+            
+            <span class="comment">// Сжатие данных и запись в выходной файл
+            </span><span class="kw">let </span>compressed = processing::compress(<span class="kw-2">&amp;</span>serialized, algorithm, use_multithreading);
             io::write_file(output_file, <span class="kw-2">&amp;</span>compressed).expect(<span class="string">"Failed to write output file"</span>);
         },
         <span class="string">"decompress" </span>=&gt; {
-            <span class="kw">let </span>compressed_data = io::read_file(input_file).expect(<span class="string">"Failed to read input file"</span>);
+            <span class="comment">// Чтение сжатого файла и его распаковка
+            </span><span class="kw">let </span>compressed_data = io::read_file(input_file).expect(<span class="string">"Failed to read input file"</span>);
             <span class="kw">let </span>decompressed = processing::decompress(<span class="kw-2">&amp;</span>compressed_data, algorithm, use_multithreading);
             <span class="kw">if </span>decompressed.is_empty() {
-                <span class="macro">eprintln!</span>(<span class="string">"Decompression failed."</span>);
+                <span class="macro">error!</span>(<span class="string">"Decompression failed."</span>);
                 <span class="kw">return</span>;
             }
-            <span class="kw">let </span>archive: ArchiveData = bincode::deserialize(<span class="kw-2">&amp;</span>decompressed)
+            <span class="comment">// Десериализация данных и запись в выходной файл
+            </span><span class="kw">let </span>archive: ArchiveData = io::bytes_to_archive_data(<span class="kw-2">&amp;</span>decompressed)
                 .expect(<span class="string">"Failed to deserialize data"</span>);
-            <span class="kw">if </span>archive.entries.len() == <span class="number">1 </span>{
-                <span class="kw">let </span>e = <span class="kw-2">&amp;</span>archive.entries[<span class="number">0</span>];
+            <span class="kw">if </span>archive.entries.len() == <span class="number">1 </span>{ <span class="comment">// Обработка единичных файлов
+                </span><span class="kw">let </span>e = <span class="kw-2">&amp;</span>archive.entries[<span class="number">0</span>];
                 <span class="kw">let </span><span class="kw-2">mut </span>file = std::fs::File::create(output_file)
                     .expect(<span class="string">"Failed to create single output file"</span>);
                 file.write_all(<span class="kw-2">&amp;</span>e.data).expect(<span class="string">"Failed to write data"</span>);
@@ -194,11 +298,13 @@
             }
         },
         <span class="kw">_ </span>=&gt; {
-            <span class="macro">eprintln!</span>(<span class="string">"Invalid command. Use 'compress' or 'decompress'."</span>);
+            <span class="macro">error!</span>(<span class="string">"Invalid command. Use 'compress' or 'decompress'."</span>);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">let </span>duration = start_time.elapsed();
+    <span class="comment">// Вывод времени выполнения
+    </span><span class="kw">let </span>duration = start_time.elapsed();
+    <span class="macro">println!</span>(<span class="string">"Program executed successfully."</span>);
     <span class="macro">println!</span>(<span class="string">"Elapsed time: {:.2?}"</span>, duration);
 }</code></pre></div></section></main></body></html>

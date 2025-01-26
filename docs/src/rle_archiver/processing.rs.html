@@ -92,25 +92,87 @@
 <a href="#92" id="92">92</a>
 <a href="#93" id="93">93</a>
 <a href="#94" id="94">94</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::rle;
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Модуль для сжатия и распаковки данных с использованием различных алгоритмов.
+//!
+//! Этот модуль предоставляет функции для сжатия и распаковки данных с использованием различных алгоритмов, таких как RLE, LZ77, LZ4, LZW и алгоритм Хаффмана. 
+//! Также поддерживается многопоточное сжатие для некоторых алгоритмов.
+//! 
+</span><span class="kw">use </span><span class="kw">crate</span>::rle;
 <span class="kw">use </span><span class="kw">crate</span>::lz77;
 <span class="kw">use </span><span class="kw">crate</span>::lz4;
 <span class="kw">use </span><span class="kw">crate</span>::lzw;
 <span class="kw">use </span><span class="kw">crate</span>::huffman;
 <span class="kw">use </span>std::thread;
-
-
-<span class="kw">pub enum </span>Algorithm {
-    Rle,
-    Lz77,
-    Lz4,
-    Lzw,
-    Hf,
+<span class="kw">use </span>log::error;
+<span class="attr">#[derive(PartialEq)]
+</span><span class="kw">pub enum </span>Algorithm {
+    <span class="doccomment">/// Алгоритм RLE (Run-Length Encoding) для сжатия повторяющихся данных.
+    </span>Rle,
+    <span class="doccomment">/// Алгоритм LZ77 для сжатия данных путем поиска повторяющихся последовательностей.
+    </span>Lz77,
+    <span class="doccomment">/// Алгоритм LZ4 для быстрого сжатия и распаковки данных.
+    </span>Lz4,
+    <span class="doccomment">/// Алгоритм LZW (Lempel-Ziv-Welch) для сжатия данных.
+    </span>Lzw,
+    <span class="doccomment">/// Алгоритм Хаффмана для сжатия данных с использованием кодирования Хаффмана.
+    </span>Hf,
 }
 
-
-<span class="kw">impl </span>Clone <span class="kw">for </span>Algorithm {
-    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+<span class="doccomment">/// Реализация клонирования для перечисления `Algorithm`.
+</span><span class="kw">impl </span>Clone <span class="kw">for </span>Algorithm {
+    <span class="doccomment">/// Создает копию текущего экземпляра `Algorithm`.
+    ///
+    /// # Возвращаемое значение
+    ///
+    /// Новый экземпляр `Algorithm`, соответствующий текущему.
+    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span><span class="self">self </span>{
             Algorithm::Rle =&gt; Algorithm::Rle,
             Algorithm::Lz77 =&gt; Algorithm::Lz77,
@@ -121,9 +183,24 @@
     }
 }
 
-
-<span class="kw">pub fn </span>compress(input: <span class="kw-2">&amp;</span>[u8], algorithm: Algorithm, use_multithreading: bool) -&gt; Vec&lt;u8&gt; {
-    <span class="kw">if </span>use_multithreading {
+<span class="doccomment">/// Сжимает входные данные с использованием выбранного алгоритма.
+/// 
+/// Если `use_multithreading` установлено в `true`, сжатие выполняется в многопоточном режиме.
+/// 
+/// # Аргументы
+/// 
+/// * `input` - Срез байтов, содержащий исходные данные для сжатия.
+/// * `algorithm` - Выбранный алгоритм сжатия.
+/// * `use_multithreading` - Флаг, указывающий использовать ли многопоточность.
+/// 
+/// # Возвращает
+/// 
+/// Вектор байтов, содержащий сжатые данные.
+/// # Примечания
+/// 
+/// При попытке использовать многопоточность для lzw или алгоритма Хаффмена будет использован однопоточный режим.
+</span><span class="kw">pub fn </span>compress(input: <span class="kw-2">&amp;</span>[u8], algorithm: Algorithm, use_multithreading: bool) -&gt; Vec&lt;u8&gt; {
+    <span class="kw">if </span>use_multithreading &amp;&amp; (<span class="macro">algorithm!</span>=Algorithm::Hf &amp;&amp; <span class="macro">algorithm!</span>=Algorithm::Lzw) {
 
         <span class="kw">let </span>num_threads = <span class="number">4</span>;
         <span class="kw">let </span>chunk_size = (input.len() + num_threads - <span class="number">1</span>) / num_threads;
@@ -133,7 +210,6 @@
         <span class="kw">for </span>chunk <span class="kw">in </span>input.chunks(chunk_size) {
             
             <span class="kw">let </span>chunk = chunk.to_vec();
-            <span class="macro">print!</span>(<span class="string">"Chunk: {:?}"</span>, chunk);
             <span class="kw">let </span>algo = algorithm.clone();
             <span class="kw">let </span>handle = thread::spawn(<span class="kw">move </span>|| {
                 <span class="kw">match </span>algo {
@@ -165,10 +241,28 @@
     }
 }
 
-
-<span class="kw">pub fn </span>decompress(input: <span class="kw-2">&amp;</span>[u8], algorithm: Algorithm, use_multithreading: bool) -&gt; Vec&lt;u8&gt; {
+<span class="doccomment">/// Распаковывает сжатые данные с использованием выбранного алгоритма.
+/// 
+/// Если `use_multithreading` установлено в `true`, распаковка выполняется в многопоточном режиме.
+/// Однако в текущей реализации многопоточность для распаковки не поддерживается.
+/// 
+///
+/// # Аргументы
+/// 
+/// * `input` - Срез байтов, содержащий сжатые данные для распаковки.
+/// * `algorithm` - Выбранный алгоритм распаковки.
+/// * `use_multithreading` - Флаг, указывающий использовать ли многопоточность.
+/// 
+/// # Возвращает
+/// 
+/// Вектор байтов, содержащий распакованные данные.
+/// 
+/// # Примечания
+/// 
+/// При попытке использовать многопоточность для распаковки будет записано сообщение об ошибке в лог.
+</span><span class="kw">pub fn </span>decompress(input: <span class="kw-2">&amp;</span>[u8], algorithm: Algorithm, use_multithreading: bool) -&gt; Vec&lt;u8&gt; {
     <span class="kw">if </span>use_multithreading {
-        <span class="macro">eprintln!</span>(<span class="string">"Multithreading not supported for decompression."</span>);
+        <span class="macro">error!</span>(<span class="string">"Multithreading not supported for decompression."</span>);
         <span class="kw">match </span>algorithm {
             Algorithm::Rle =&gt; rle::decompress(input),
             Algorithm::Lz77 =&gt; lz77::decompress(input),

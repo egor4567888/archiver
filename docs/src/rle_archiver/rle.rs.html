@@ -101,12 +101,51 @@
 <a href="#101" id="101">101</a>
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
-</pre></div><pre class="rust"><code><span class="kw">pub fn </span>compress(input: <span class="kw-2">&amp;</span>[u8]) -&gt; Vec&lt;u8&gt; {
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Модуль для сжатия и распаковки данных с использованием алгоритма RLE (Run-Length Encoding).
+//!
+//! Этот модуль предоставляет функции для сжатия и распаковки данных с использованием алгоритма RLE. 
+//! Алгоритм RLE используется для сжатия данных путем замены повторяющихся последовательностей байтов на пары (длина, значение).
+
+/// Сжимает входные данные с использованием алгоритма RLE.
+///
+/// # Аргументы
+///
+/// * `input` - Срез байтов, которые требуется сжать.
+///
+/// # Возвращает
+///
+/// Вектор байтов, представляющий сжатые данные.
+</span><span class="kw">pub fn </span>compress(input: <span class="kw-2">&amp;</span>[u8]) -&gt; Vec&lt;u8&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>compressed = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
 
     <span class="kw">while </span>i &lt; input.len() {
-        <span class="comment">// Check for run of repeated bytes
+        <span class="comment">// Проверка на последовательность повторяющихся байтов
         </span><span class="kw">let </span><span class="kw-2">mut </span>run_len = <span class="number">1</span>;
         <span class="kw">while </span>i + run_len &lt; input.len()
             &amp;&amp; input[i + run_len] == input[i]
@@ -136,7 +175,8 @@
             }
             <span class="kw">continue</span>;
             }
-            <span class="comment">// Collect distinct bytes
+             <span class="comment">// Сборка неповторяющихся байтов
+             // Для лучшего сжатия если в последовательности встречаются только два повторяющихся символа они будут упакованы как неповторяющиеся
             </span><span class="kw">let </span>distinct_start = i;
             <span class="kw">let </span><span class="kw-2">mut </span>distinct_count: usize = <span class="number">2</span>;
             i += <span class="number">2</span>;
@@ -159,7 +199,17 @@
     compressed
 }
 
-<span class="kw">pub fn </span>decompress(input: <span class="kw-2">&amp;</span>[u8]) -&gt; Vec&lt;u8&gt; {
+
+<span class="doccomment">/// Распаковывает сжатые данные, используя алгоритм RLE.
+///
+/// # Аргументы
+///
+/// * `input` - Срез байтов, которые требуется распаковать.
+///
+/// # Возвращает
+///
+/// Вектор байтов, представляющий распакованные данные.
+</span><span class="kw">pub fn </span>decompress(input: <span class="kw-2">&amp;</span>[u8]) -&gt; Vec&lt;u8&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>decompressed = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
 
