@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["read_dir_recursive","read_file","write_dir_entries","write_file"],"struct":["DirEntry"]};
