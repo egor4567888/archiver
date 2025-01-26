@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["main"],"mod":["huffman","io","lz4","lz77","lzw","processing","rle"],"struct":["ArchiveData"]};

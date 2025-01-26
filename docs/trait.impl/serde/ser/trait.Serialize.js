@@ -1,4 +1,0 @@
-(function() {var implementors = {
-"rle_archiver":[["impl <a class=\"trait\" href=\"serde/ser/trait.Serialize.html\" title=\"trait serde::ser::Serialize\">Serialize</a> for <a class=\"struct\" href=\"rle_archiver/io/struct.DirEntry.html\" title=\"struct rle_archiver::io::DirEntry\">DirEntry</a>"],["impl <a class=\"trait\" href=\"serde/ser/trait.Serialize.html\" title=\"trait serde::ser::Serialize\">Serialize</a> for <a class=\"struct\" href=\"rle_archiver/struct.ArchiveData.html\" title=\"struct rle_archiver::ArchiveData\">ArchiveData</a>"]],
-"serde":[]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

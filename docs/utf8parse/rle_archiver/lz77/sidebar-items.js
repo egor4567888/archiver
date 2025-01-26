@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["LOOKAHEAD_BUFFER_SIZE","WINDOW_SIZE"],"fn":["compress","decompress"]};

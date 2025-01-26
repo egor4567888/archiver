@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["build_codes","build_huffman_tree","compress","decompress"],"struct":["Node"]};

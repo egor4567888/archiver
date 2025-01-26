@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["MAX_DICT_SIZE"],"fn":["compress","decompress"],"struct":["BitReader","BitWriter"]};

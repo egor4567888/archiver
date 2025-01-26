@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["archive_data_to_bytes","bytes_to_archive_data","bytes_to_dir_entry","dir_entry_to_bytes","read_dir_recursive","read_file","write_dir_entries","write_file"],"struct":["DirEntry"]};
